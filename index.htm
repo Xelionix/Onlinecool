@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chatroom</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: scroll;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        #inputBox {
+            display: flex;
+            padding: 10px;
+            background-color: #f2f2f2;
+        }
+        #messageInput {
+            flex: 1;
+            margin-right: 10px;
+        }
+        #sendButton {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="messages"></div>
+    <div id="inputBox">
+        <input type="text" id="messageInput" placeholder="Type your message...">
+        <button id="sendButton" onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const messagesContainer = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        let ws;
+
+        function initWebSocket() {
+            // Replace with your WebSocket server URL
+            ws = new WebSocket('wss://echo.websocket.org');
+
+            ws.onopen = () => {
+                console.log('WebSocket connection opened.');
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                displayMessage(message);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket connection closed. Reconnecting...');
+                setTimeout(initWebSocket, 1000);
+            };
+        }
+
+        function displayMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${message.username}: ${message.text}`;
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message !== '') {
+                const username = prompt('Enter your username:');
+                const data = { username, text: message };
+                ws.send(JSON.stringify(data));
+                messageInput.value = '';
+            }
+        }
+
+        initWebSocket();
+    </script>
+</body>
+</html>
